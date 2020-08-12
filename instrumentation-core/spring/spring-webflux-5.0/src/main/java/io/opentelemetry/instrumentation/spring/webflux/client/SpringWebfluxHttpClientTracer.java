@@ -30,9 +30,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientRequest, ClientResponse> {
+public class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientRequest, ClientResponse> {
 
   public static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
+
+  public SpringWebfluxHttpClientTracer(Tracer tracer) {
+    super(tracer);
+  }
+
+  public SpringWebfluxHttpClientTracer() {}
 
   public void onCancel(final Span span) {
     span.setAttribute("event", "cancelled");
@@ -77,9 +83,5 @@ class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientRequest, Clie
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.spring-webflux-5.0";
-  }
-
-  public Tracer getTracer() {
-    return tracer;
   }
 }

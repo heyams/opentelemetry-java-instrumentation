@@ -17,6 +17,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientsProperties;
+import io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer;
 import io.opentelemetry.trace.Tracer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -43,6 +44,6 @@ public class WebClientAutoConfiguration {
   @Bean
   @Autowired
   public WebClientBeanPostProcessor otelWebClientBeanPostProcessor(final Tracer tracer) {
-    return new WebClientBeanPostProcessor(tracer);
+    return new WebClientBeanPostProcessor(new SpringWebfluxHttpClientTracer(tracer));
   }
 }

@@ -17,11 +17,11 @@
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -31,42 +31,43 @@ import reactor.core.publisher.Mono;
 
 public class WebClientTracingFilter implements ExchangeFilterFunction {
 
-  private final Tracer tracer;
+  private final SpringWebfluxHttpClientTracer tracer;
 
-  public WebClientTracingFilter(Tracer tracer) {
+  public WebClientTracingFilter(SpringWebfluxHttpClientTracer tracer) {
     this.tracer = tracer;
   }
 
   public static void addFilter(final List<ExchangeFilterFunction> exchangeFilterFunctions) {
-    addFilter(exchangeFilterFunctions, TRACER.getTracer());
+    addFilter(exchangeFilterFunctions, TRACER);
   }
 
   public static void addFilter(
-      final List<ExchangeFilterFunction> exchangeFilterFunctions, Tracer tracer) {
+      final List<ExchangeFilterFunction> exchangeFilterFunctions,
+      SpringWebfluxHttpClientTracer tracer) {
     exchangeFilterFunctions.add(0, new WebClientTracingFilter(tracer));
   }
 
   @Override
   public Mono<ClientResponse> filter(final ClientRequest request, final ExchangeFunction next) {
-    Span span = TRACER.startSpan(request);
+    Span span = tracer.startSpan(request);
+    ClientRequest mutatedRequest =
+        ClientRequest.from(request)
+            .headers(httpHeaders -> tracer.inject(Context.current(), httpHeaders))
+            .build();
 
-    try (Scope scope = tracer.withSpan(span)) {
-      ClientRequest mutatedRequest =
-          ClientRequest.from(request)
-              .headers(httpHeaders -> TRACER.inject(Context.current(), httpHeaders))
-              .build();
+    try (Scope scope = currentContextWith(span)) {
       return next.exchange(mutatedRequest)
           .doOnSuccessOrError(
               (clientResponse, throwable) -> {
                 if (throwable != null) {
-                  TRACER.endExceptionally(span, clientResponse, throwable);
+                  tracer.endExceptionally(span, clientResponse, throwable);
                 } else {
-                  TRACER.end(span, clientResponse);
+                  tracer.end(span, clientResponse);
                 }
               })
           .doOnCancel(
               () -> {
-                TRACER.end(span);
+                tracer.end(span);
               });
     }
   }
