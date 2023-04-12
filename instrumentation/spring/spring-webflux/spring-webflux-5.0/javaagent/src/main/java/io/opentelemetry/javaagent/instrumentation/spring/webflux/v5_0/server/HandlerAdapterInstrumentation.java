@@ -64,6 +64,15 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Context.current();
+//      Span serverSpan = LocalRootSpan.fromContextOrNull(parentContext);
+//
+//      PathPattern bestPattern =
+//              exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+//      if (serverSpan != null && bestPattern != null) {
+//        String spanName = ServletContextPath.prepend(Context.current(), bestPattern.toString());
+//        serverSpan.updateName(spanName);
+//      }
+
 
       HttpRouteHolder.updateHttpRoute(
           parentContext, HttpRouteSource.CONTROLLER, httpRouteGetter(), exchange);
