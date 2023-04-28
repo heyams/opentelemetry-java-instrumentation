@@ -532,7 +532,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     }
     Throwable clientError = options.getClientSpanErrorMapper().apply(uri, ex);
 
-    testing.waitAndAssertTraces(
+                   testing.waitAndAssertTraces(
         trace -> {
           List<Consumer<SpanDataAssert>> spanAsserts =
               Arrays.asList(
@@ -878,7 +878,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   // Visible for spock bridge.
-  SpanDataAssert assertClientSpan(
+  protected SpanDataAssert assertClientSpan(
       SpanDataAssert span, URI uri, String method, Integer responseCode) {
     Set<AttributeKey<?>> httpClientAttributes = options.getHttpAttributes().apply(uri);
     return span.hasName(options.getExpectedClientSpanNameMapper().apply(uri, method))
@@ -981,7 +981,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   // Visible for spock bridge.
-  static SpanDataAssert assertServerSpan(SpanDataAssert span) {
+  protected static SpanDataAssert assertServerSpan(SpanDataAssert span) {
     return span.hasName("test-http-server").hasKind(SpanKind.SERVER);
   }
 
